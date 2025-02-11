@@ -11,5 +11,11 @@
     "type": "git",
     "url": "git+https://github.com/icmx/dove.git"
   },
-  "private": true
+  "private": true,
+  "scripts": {
+    "dev": "tsx src/main.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
+  }
 }
