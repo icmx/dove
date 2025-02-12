@@ -1,10 +1,10 @@
-import * as esbuild from 'esbuild';
-import * as files from 'files';
+import * as ESbuild from 'esbuild';
+import * as Files from 'files';
 
 (async () => {
-  await files.remove('dist');
+  await Files.remove('dist');
 
-  await esbuild.build({
+  await ESbuild.build({
     entryPoints: ['./src/main.ts'],
     logLevel: 'info',
     outdir: './dist',

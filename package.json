@@ -13,14 +13,16 @@
   },
   "private": true,
   "scripts": {
-    "dev": "tsx ./src/main.ts",
-    "build": "tsx ./utils/build.ts"
+    "dev": "tsx watch ./src/main.ts",
+    "build": "tsx ./utils/build.ts",
+    "start": "node ./dist/main.js"
   },
   "devDependencies": {
     "esbuild": "^0.25.0",
     "tsx": "^4.19.2"
   },
   "dependencies": {
+    "fastify": "^5.2.1",
     "files": "^3.0.1"
   }
 }
