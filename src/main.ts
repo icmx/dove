@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import { Env } from './common/env';
 
 export const main = async (): Promise<void> => {
   const fastify = Fastify();
@@ -7,10 +8,12 @@ export const main = async (): Promise<void> => {
     return { hello: 'world' };
   });
 
-  try {
-    await fastify.listen({ port: 3000 });
+  const { DOVE_HOST, DOVE_PORT } = Env.config;
 
-    console.log('ready');
+  try {
+    await fastify.listen({ host: DOVE_HOST, port: DOVE_PORT });
+
+    console.log(`ready http://${DOVE_HOST}:${DOVE_PORT}`);
   } catch (error) {
     fastify.log.error(error);
   }
