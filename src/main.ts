@@ -1,5 +1,5 @@
 import Fastify from 'fastify';
-import { Env } from './common/env';
+import { Env } from './shared/env';
 
 export const main = async (): Promise<void> => {
   const fastify = Fastify();
