@@ -5,6 +5,7 @@ export namespace Env {
     DOVE_HOST: z.string().default('[::1]'),
     DOVE_PORT: z.number({ coerce: true }).int().default(3000),
     DOVE_DB_FILENAME: z.string().default('./db.dev.json'),
+    DOVE_SALT: z.string().default('0000000000000000'),
   });
 
   const values = Object.fromEntries(
