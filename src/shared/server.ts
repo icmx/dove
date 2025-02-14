@@ -1,12 +1,14 @@
-import Fastify, { FastifyInstance } from 'fastify';
-import { Env } from './env';
 import fastifyFormbody from '@fastify/formbody';
 import fastifyRateLimit from '@fastify/rate-limit';
+import fastifyStatic from '@fastify/static';
+import Fastify, { FastifyInstance } from 'fastify';
 import {
   serializerCompiler,
   validatorCompiler,
   ZodTypeProvider,
 } from 'fastify-type-provider-zod';
+import Files from 'files';
+import { Env } from './env';
 
 export namespace Server {
   export const create = async (): Promise<FastifyInstance> => {
@@ -19,6 +21,15 @@ export namespace Server {
     fastify.setSerializerCompiler(serializerCompiler);
 
     fastify.register(fastifyFormbody);
+
+    if (!Env.config.DOVE_DISABLE_STATIC) {
+      const root = await Files.abs(Env.config.DOVE_VIEW_ROOT);
+
+      await Files.mkdir(root);
+
+      fastify.register(fastifyStatic, { root });
+    }
+
     fastify.register(fastifyRateLimit, { global: false });
 
     return fastify;
