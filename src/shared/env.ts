@@ -6,6 +6,7 @@ export namespace Env {
     DOVE_PORT: z.number({ coerce: true }).int().default(3000),
     DOVE_DB_FILENAME: z.string().default('./db.dev.json'),
     DOVE_SALT: z.string().default('0000000000000000'),
+    DOVE_TRUST_PROXY: z.boolean({ coerce: true }).default(false),
   });
 
   const values = Object.fromEntries(

@@ -1,21 +1,21 @@
-import Fastify from 'fastify';
 import { Env } from './shared/env';
+import { Server } from './shared/server';
 
 export const main = async (): Promise<void> => {
-  const fastify = Fastify();
+  const server = await Server.create();
 
-  fastify.get('/', async function () {
+  server.get('/', async function () {
     return { hello: 'world' };
   });
 
   const { DOVE_HOST, DOVE_PORT } = Env.config;
 
   try {
-    await fastify.listen({ host: DOVE_HOST, port: DOVE_PORT });
+    await server.listen({ host: DOVE_HOST, port: DOVE_PORT });
 
     console.log(`ready http://${DOVE_HOST}:${DOVE_PORT}`);
   } catch (error) {
-    fastify.log.error(error);
+    server.log.error(error);
   }
 };
 
