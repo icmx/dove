@@ -20,7 +20,7 @@ export namespace DB {
     content: string;
     restriction?: Restriction;
     ipHash: string;
-    passwordHash: string;
+    passwordHash?: string;
   };
 
   export interface Thread {

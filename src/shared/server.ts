@@ -5,7 +5,6 @@ import Fastify, { FastifyInstance } from 'fastify';
 import {
   serializerCompiler,
   validatorCompiler,
-  ZodTypeProvider,
 } from 'fastify-type-provider-zod';
 import Files from 'files';
 import { Env } from './env';
@@ -15,7 +14,7 @@ export namespace Server {
     const fastify = Fastify({
       logger: false,
       trustProxy: Env.config.DOVE_TRUST_PROXY,
-    }).withTypeProvider<ZodTypeProvider>();
+    });
 
     fastify.setValidatorCompiler(validatorCompiler);
     fastify.setSerializerCompiler(serializerCompiler);

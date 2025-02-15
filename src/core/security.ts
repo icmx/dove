@@ -7,7 +7,7 @@ export namespace Security {
   };
 
   export const hashPassword = async (
-    password: string
+    password: string | undefined
   ): Promise<string | undefined> => {
     if (!password) {
       return undefined;

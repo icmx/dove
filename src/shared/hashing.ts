@@ -3,7 +3,7 @@ import { argon2id, argon2Verify } from 'hash-wasm';
 export namespace Hashing {
   export const hash = (text: string, salt: string): Promise<string> => {
     const argon2Password = text.normalize();
-    const argon2Salt = new Uint8Array();
+    const argon2Salt = new Uint8Array(16);
     const argon2Secret = salt.normalize();
 
     // This makes hash unique which is more secure but will break
