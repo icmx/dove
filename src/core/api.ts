@@ -107,15 +107,19 @@ export namespace Api {
         const ipHash = await Security.hashIp(req.ip);
         const passwordHash = await Security.hashPassword(password);
 
-        Commands.parse(content, {
-          '': () => {
+        await Commands.parse(content, {
+          '': async () => {
             const id = DB.mutate(() => {
               return DB.insertThread({ content, ipHash, passwordHash });
             });
 
             rep.redirectUrl = `/threads/${id}`;
+
+            await View.make({ buildThread: id });
           },
         });
+
+        console.log(rep.redirectUrl)
 
         rep.handleAutosave(_autosave).handleRedurectUrl();
       },
@@ -141,7 +145,7 @@ export namespace Api {
         const passwordHash = await Security.hashPassword(password);
 
         await Commands.parse(content, {
-          '': () => {
+          '': async () => {
             const id = DB.mutate(() => {
               return DB.insertReply(threadId, {
                 content,
@@ -151,6 +155,8 @@ export namespace Api {
             });
 
             rep.redirectUrl = `/threads/${threadId}#reply-${id}`;
+
+            await View.make({ buildThread: threadId });
           },
         });
 
