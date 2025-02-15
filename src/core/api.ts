@@ -119,8 +119,6 @@ export namespace Api {
           },
         });
 
-        console.log(rep.redirectUrl)
-
         rep.handleAutosave(_autosave).handleRedurectUrl();
       },
     });

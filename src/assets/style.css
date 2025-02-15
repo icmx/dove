@@ -1,1 +1,205 @@
-/* @todo! */
+html {
+  color-scheme: dark light;
+}
+
+body {
+  font-family: sans-serif;
+
+  color: #a19989;
+  background-color: #212427;
+}
+
+a {
+  color: #8ebbd1;
+  text-decoration: none;
+}
+
+h1 {
+  font-size: 1rem;
+  margin: 1rem 0 0;
+}
+
+h2 {
+  font-size: 1rem;
+  margin: 2.5rem 0 1rem;
+}
+
+textarea {
+  resize: vertical;
+}
+
+.dove-view {
+  margin: 0 auto;
+  padding: 0 1rem;
+
+  min-height: 100vh;
+  max-width: 86ch;
+
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+
+  overflow-y: scroll;
+}
+
+.dove-view-main {
+  min-width: 0;
+}
+
+.dove-view-footer {
+  text-align: center;
+  opacity: 0.5;
+}
+
+.markup-anchor {
+  text-decoration: underline;
+}
+
+.markup-quote {
+  color: #8fd18f;
+  quotes: none;
+}
+
+.markup-cut {
+  opacity: 0.5;
+}
+
+.dove-card {
+  margin: 1.5rem 0;
+}
+
+.dove-card-header {
+  display: flex;
+  justify-content: space-between;
+
+  opacity: 0.5;
+  font-size: 0.8rem;
+}
+
+.dove-card-content {
+  overflow: auto;
+}
+
+.dove-card-footer {
+  opacity: 0.5;
+  font-size: 0.8rem;
+}
+
+.dove-card:target {
+  animation: target 2s;
+}
+
+@keyframes target {
+  50% {
+    color: #ffffff;
+  }
+}
+
+.dove-preview .is-reply {
+  margin-left: 2.5rem;
+}
+
+.dove-details-summary {
+  margin: 1rem 0;
+
+  font-weight: 600;
+}
+
+.dove-callout {
+  margin: 0.5rem 0;
+
+  text-align: center;
+  border: solid 3px #2e3c4a;
+  border-radius: 0.8rem;
+}
+
+.dove-controls {
+  border-radius: 6px;
+  background-color: #2e3c4a;
+
+  border: solid 1px #615e58;
+}
+
+.dove-controls:focus-within {
+  border-color: #a19989;
+}
+
+.dove-controls-group {
+  display: flex;
+}
+
+.dove-control {
+  display: block;
+
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 0.5rem;
+
+  background-color: transparent;
+  border: none;
+
+  color: #a19989;
+
+  font-size: 1rem;
+  font-size: monospace;
+  line-height: 1.25;
+}
+
+.dove-control:focus {
+  outline: none;
+}
+
+.dove-control::placeholder {
+  font-family: sans-serif;
+}
+
+.dove-button {
+  padding: 0.5rem;
+
+  background-color: transparent;
+  border: none;
+
+  color: #a19989;
+
+  font-size: 1rem;
+  font-size: sans-serif;
+
+  white-space: nowrap;
+}
+
+.dove-hr {
+  height: 0;
+  margin: 0;
+  padding: 0;
+
+  background: none;
+
+  border: none;
+  border-top: dashed 1px #615e58;
+}
+
+.dove-index {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.5rem 0.5rem;
+}
+
+.dove-index-content {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dove-restriction {
+  font-style: italic;
+  font-size: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.dove-restriction.is-warning {
+  color: #b9b946;
+}
+
+.dove-restriction.is-ban {
+  color: #d16161;
+}

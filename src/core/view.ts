@@ -3,6 +3,10 @@ import { Env } from '../shared/env';
 import { I18N } from '../shared/i18n';
 import { Status } from '../shared/status';
 import {
+  DOVE_CONTENT_MAX,
+  DOVE_CONTENT_MIN,
+  DOVE_PASSWORD_MAX,
+  DOVE_PASSWORD_MIN,
   DOVE_PREVIEW_LIMIT,
   DOVE_PREVIEW_REPLIES_LIMIT,
   DOVE_THREAD_HARD_LIMIT,
@@ -17,6 +21,198 @@ export namespace View {
     export type F<P = void, R = void> = (props: P) => R;
 
     export type Fragment<P = void> = F<P, string>;
+
+    export type Page = 'threads' | 'replies';
+
+    export const Time: Fragment<number> = (ms: number) => {
+      const value = new Date(ms * 1000)
+        .toJSON()
+        .replace('T', ' ')
+        .slice(0, 16);
+
+      return `<time class="dove-datetime" datetime="${value}">${value}</time>`;
+    };
+
+    export const Callout: Fragment<string> = (text) => {
+      return `
+        <aside class="dove-callout">
+          <p>${text}</p>
+        </aside>
+      `;
+    };
+
+    export const Restriction: Fragment<{
+      restriction: DB.Restriction;
+    }> = ({ restriction }) => {
+      return `
+        <aside class="dove-restriction is-${restriction}">
+          ${i18n.shared.restriction[restriction]}
+        </aside>
+      `;
+    };
+
+    export const ThreadCard: Fragment<{
+      page: Page;
+      thread: DB.Thread;
+    }> = ({ page, thread }) => {
+      const createdHtml = Time(thread.created);
+      const lengthHtml = i18n.shared.repliesCount(
+        thread.replies.entries.length
+      );
+
+      const restrictionHtml = thread.restriction
+        ? Restriction({ restriction: thread.restriction })
+        : '';
+
+      if (page === 'threads') {
+        const idHtml = `<a href="/threads/${thread.id}">@${thread.id}</a>`;
+        const contentHtml = thread.content;
+
+        return `
+          <article class="dove-card is-thread" id="thread-${thread.id}">
+            <header class="dove-card-header">
+              ${idHtml}
+              ${createdHtml}
+            </header>
+            <section class="dove-card-content">
+              ${contentHtml}
+            </section>
+            ${restrictionHtml}
+            <footer class="dove-card-footer">
+              ${lengthHtml}
+            </footer>
+          </article>
+        `;
+      }
+
+      if (page === 'replies') {
+        const idHtml = `<span>@${thread.id}</span>`;
+        const contentHtml = thread.content;
+
+        return `
+          <article class="dove-card is-thread" id="thread-${thread.id}">
+            <header class="dove-card-header">
+              ${idHtml}
+              ${createdHtml}
+            </header>
+            <section class="dove-card-content">
+              ${contentHtml}
+            </section>
+            ${restrictionHtml}
+            <footer class="dove-card-footer">
+              ${lengthHtml}
+            </footer>
+          </article>
+        `;
+      }
+
+      throw new Error(`Unknown page: ${page}`);
+    };
+
+    export const ReplyCard: Fragment<{
+      page: Page;
+      threadId: number;
+      reply: DB.Reply;
+    }> = ({ page, threadId, reply }) => {
+      const createdHtml = Fragments.Time(reply.created);
+
+      const restricionHtml = reply.restriction
+        ? Restriction({ restriction: reply.restriction })
+        : '';
+
+      if (page === 'threads') {
+        const idHtml = `<a href="/threads/${threadId}#reply-${reply.id}">#${reply.id}</a>`;
+        const contentHtml = reply.content;
+
+        return `
+          <article class="dove-card is-reply">
+            <header class="dove-card-header">
+              ${idHtml}
+              ${createdHtml}
+            </header>
+            <section class="dove-card-content">
+              ${contentHtml}
+            </section>
+            ${restricionHtml}
+          </article>
+        `;
+      }
+
+      if (page === 'replies') {
+        const idHtml = `
+          <a href="#reply-${reply.id}" data-autoid-reply="${reply.id}">
+            #${reply.id}
+          </a>`;
+        const contentHtml = reply.content;
+
+        return `
+          <article class="dove-card is-reply" id="reply-${reply.id}">
+            <header class="dove-card-header">
+              ${idHtml}
+              ${createdHtml}
+            </header>
+            <section class="dove-card-content">
+              ${contentHtml}
+            </section>
+            ${restricionHtml}
+          </article>
+        `;
+      }
+
+      throw new Error(`Unknown page: ${page}`);
+    };
+
+    export const ThreadLine: Fragment<{
+      thread: DB.Thread;
+    }> = ({ thread }) => {
+      const idHtml = `<a href="/threads/${thread.id}">@${thread.id}</a>`;
+
+      const contentHtml = `
+        <div class="dove-index-content">${thread.content}</div>
+      `;
+
+      const lengthHtml = `<div>(${thread.replies.entries.length})</div>`;
+
+      return `
+        ${idHtml}
+        ${contentHtml}
+        ${lengthHtml}
+      `;
+    };
+
+    export const Fields: Fragment<{ page: Page }> = ({ page }) => {
+      return `
+        <div class="dove-controls">
+          <textarea
+            class="dove-control"
+            name="content"
+            placeholder="${i18n.shared.content}"
+            required="required"
+            minlength="${DOVE_CONTENT_MIN}"
+            maxlength="${DOVE_CONTENT_MAX}"
+            rows="3"
+            data-autosize
+          ></textarea>
+          <hr class="dove-hr" />
+          <div class="dove-controls-group">
+            <input
+              class="dove-control"
+              type="password"
+              name="password"
+              placeholder="${i18n.shared.password}"
+              minlength="${DOVE_PASSWORD_MIN}"
+              maxlength="${DOVE_PASSWORD_MAX}"
+            />
+            <button
+              class="dove-button"
+              type="submit"
+            >
+              ${i18n.shared.createButton}
+            </button>
+          </div>
+        </div>
+      `;
+    };
 
     export const ErrorLayout: Fragment<{
       body: Status.Body;
@@ -143,6 +339,7 @@ export namespace View {
 
     const mainThreadsHtml = risingThreads
       .map((thread) => {
+        const threadId = thread.id;
         const replies = thread.replies.entries;
         const start = Math.max(
           replies.length - DOVE_PREVIEW_REPLIES_LIMIT
@@ -150,10 +347,15 @@ export namespace View {
 
         const repliesHtml = replies
           .slice(start)
-          .map((reply) => JSON.stringify(reply))
+          .map((reply) =>
+            Fragments.ReplyCard({ page: 'threads', threadId, reply })
+          )
           .join('');
 
-        const threadHtml = JSON.stringify(thread);
+        const threadHtml = Fragments.ThreadCard({
+          page: 'threads',
+          thread,
+        });
 
         return `
         <article class="dove-preview">
@@ -171,22 +373,23 @@ export namespace View {
       enctype="application/x-www-form-urlencoded"
       data-autosave="thread"
     >
-      <h2>${i18n.threads.createHeader}</h2>
+      <h2>${i18n.threadsView.createHeader}</h2>
+      ${Fragments.Fields({ page: 'threads' })}
     </form>
     <section>
-      <h2>${i18n.threads.latestHeader}</h2>
+      <h2>${i18n.threadsView.latestHeader}</h2>
       ${mainThreadsHtml}
     </section>
   `;
 
     const asideThreadsHtml = latestThreads
-      .map((thread) => thread.id)
+      .map((thread) => Fragments.ThreadLine({ thread }))
       .join('');
 
     const asideHtml = `
     <details>
       <summary class="dove-details-summary">
-        ${i18n.threads.indexHeader}
+        ${i18n.threadsView.indexHeader}
       </summary>
       <section class="dove-index">
         ${asideThreadsHtml}
@@ -198,7 +401,7 @@ export namespace View {
     const script = await Utils.loadScriptAsset();
 
     const html = Fragments.Layout({
-      title: i18n.threads.title,
+      title: i18n.threadsView.title,
       mainChildren: mainHtml,
       asideChildren: asideHtml,
       style,
@@ -213,10 +416,15 @@ export namespace View {
   ): Promise<void> => {
     const thread = DB.selectThreadById(threadId);
 
-    const threadHtml = JSON.stringify(thread);
+    const threadHtml = Fragments.ThreadCard({
+      page: 'replies',
+      thread,
+    });
 
     const repliesHtml = thread.replies.entries
-      .map((reply) => JSON.stringify(reply))
+      .map((reply) =>
+        Fragments.ReplyCard({ page: 'replies', threadId, reply })
+      )
       .join('');
 
     const style = await Utils.loadStyleAsset();
@@ -230,24 +438,25 @@ export namespace View {
         action="/threads/${threadId}/replies"
         enctype="application/x-www-form-urlencoded"
       >
-        <h2>${i18n.replies.createHeader}</h2>
+        <h2>${i18n.repliesView.createHeader}</h2>
+        ${Fragments.Fields({ page: 'replies' })}
       </form>
       `;
 
     let calloutHtml = '';
 
     if (thread.replies.entries.length >= DOVE_THREAD_SOFT_LIMIT) {
-      calloutHtml = i18n.replies.softLimitReached;
+      calloutHtml = i18n.repliesView.softLimitReached;
     }
 
     if (thread.replies.entries.length >= DOVE_THREAD_HARD_LIMIT) {
       postingHtml = '';
 
-      calloutHtml = i18n.replies.hardLimitReached;
+      calloutHtml = i18n.repliesView.hardLimitReached;
     }
 
     const html = Fragments.Layout({
-      title: i18n.replies.title,
+      title: i18n.repliesView.title,
       mainChildren: `
         ${threadHtml}
         ${repliesHtml}
