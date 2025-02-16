@@ -15,7 +15,8 @@
   "scripts": {
     "dev": "tsx watch ./src/main.ts",
     "build": "tsx ./utils/build.ts",
-    "start": "node ./dist/main.js"
+    "start": "node ./dist/main.js",
+    "build-view": "tsx ./utils/build-view.ts"
   },
   "devDependencies": {
     "@types/node": "^22.13.1",
