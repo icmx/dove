@@ -29,6 +29,22 @@ export const DOVE_PREVIEW_LIMIT = 20;
 export const DOVE_PREVIEW_REPLIES_LIMIT = 3;
 
 /**
+ * Maximum length of content in previews (both threads and replies in
+ * latest threads section)
+ */
+export const DOVE_PREVIEW_CONTENT_LIMIT = 300;
+
+/**
+ * Maximum length of content in threads lines (full index section)
+ */
+export const DOVE_LINE_CONTENT_LIMIT = 80;
+
+/**
+ * Maximum length of content in title (browser tab text)
+ */
+export const DOVE_TITLE_CONTENT_LIMIT = 80;
+
+/**
  * When this number is reached, new replies should not raise the thread
  * to the top of threads page
  */

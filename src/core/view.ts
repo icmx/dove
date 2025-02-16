@@ -5,21 +5,155 @@ import { Status } from '../shared/status';
 import {
   DOVE_CONTENT_MAX,
   DOVE_CONTENT_MIN,
+  DOVE_LINE_CONTENT_LIMIT,
   DOVE_PASSWORD_MAX,
   DOVE_PASSWORD_MIN,
+  DOVE_PREVIEW_CONTENT_LIMIT,
   DOVE_PREVIEW_LIMIT,
   DOVE_PREVIEW_REPLIES_LIMIT,
   DOVE_THREAD_HARD_LIMIT,
   DOVE_THREAD_SOFT_LIMIT,
+  DOVE_TITLE_CONTENT_LIMIT,
 } from '../constants';
 import { DB } from './db';
 
 const i18n = I18N.locales[Env.config.DOVE_LANG];
 
 export namespace View {
-  export namespace Fragments {
-    export type F<P = void, R = void> = (props: P) => R;
+  export type F<P = void, R = void> = (props: P) => R;
 
+  export namespace Markup {
+    export type Mapper = F<string, string>;
+
+    export type Operator<P = void> = F<P, Mapper>;
+
+    export const pipe = <I, O>(then: F<I, O>) => {
+      return {
+        then: <J>(next: F<O, J>) => {
+          return pipe((from: I) => {
+            return next(then(from));
+          });
+        },
+        done: () => then,
+      };
+    };
+
+    export const sanitize: Operator = () => {
+      return (source = '') => {
+        return source
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;');
+      };
+    };
+
+    export const preview: Operator<{
+      max: number;
+      cut?: string;
+    }> = ({ max, cut = '' }) => {
+      if (!max) {
+        return (source = '') => source;
+      }
+
+      return (source = '') => {
+        if (!source) {
+          return '';
+        }
+
+        const maxLines = Math.round(max / 80);
+        const starter = source
+          .substring(0, max)
+          .split('\n')
+          .slice(0, maxLines)
+          .join('\n');
+
+        if (source.length === starter.length) {
+          return starter;
+        }
+
+        return starter
+          .concat(' ')
+          .concat(`<em class="markup-cut">${cut}</em>`);
+      };
+    };
+
+    export const linkAnchors: Operator = () => {
+      return (source = '') => {
+        return source.replace(
+          /https?:\/\/\S{1,1000}|@\d{1,10}(#\d{1,10})?|#\d{1,10}/g,
+          (pattern) => {
+            if (pattern.startsWith('#')) {
+              const replyId = pattern.slice(1);
+
+              return `<a class="markup-link" href="#reply-${replyId}">${pattern}</a>`;
+            }
+
+            if (pattern.startsWith('h')) {
+              const href = pattern.replace(/(,|\.|\(|\))+$/, '');
+              const rest = pattern.substring(href.length);
+
+              return `<a class="markup-anchor" href="${href}" rel="noreferrer" target="_blank">${href}</a>${rest}`;
+            }
+
+            if (pattern.startsWith('@')) {
+              const [threadId, replyId] = pattern.slice(1).split('#');
+
+              return `<a class="markup-link" href="/threads/${threadId}#reply-${replyId}">${pattern}</a>`;
+            }
+
+            return '';
+          }
+        );
+      };
+    };
+
+    export const breakSections: Operator = () => {
+      return (source = '') => {
+        const quoteMark = '&gt;';
+
+        return source
+          .split(/\n{2}/)
+          .map((section) => {
+            return section
+              .split(/ *\n/)
+              .map((line) => {
+                if (line.startsWith(quoteMark)) {
+                  return `<q class="markup-quote">${line}</q>`;
+                }
+
+                return line;
+              })
+              .join('<br />');
+          })
+          .map((section) => {
+            return `<p class="markup-paragraph">${section}</p>`;
+          })
+          .join('');
+      };
+    };
+
+    export const contentMapper = pipe(sanitize())
+      .then(preview({ max: 0 }))
+      .then(linkAnchors())
+      .then(breakSections())
+      .done();
+
+    export const contentPreviewMapper = pipe(sanitize())
+      .then(preview({ max: DOVE_PREVIEW_CONTENT_LIMIT, cut: '[...]' }))
+      .then(linkAnchors())
+      .then(breakSections())
+      .done();
+
+    export const contentLineMapper = pipe(sanitize())
+      .then(preview({ max: DOVE_LINE_CONTENT_LIMIT }))
+      .done();
+
+    export const contentTitleMapper = pipe(sanitize())
+      .then(preview({ max: DOVE_TITLE_CONTENT_LIMIT }))
+      .done();
+  }
+
+  export namespace Fragments {
     export type Fragment<P = void> = F<P, string>;
 
     export type Page = 'threads' | 'replies';
@@ -66,7 +200,7 @@ export namespace View {
 
       if (page === 'threads') {
         const idHtml = `<a href="/threads/${thread.id}">@${thread.id}</a>`;
-        const contentHtml = thread.content;
+        const contentHtml = Markup.contentPreviewMapper(thread.content);
 
         return `
           <article class="dove-card is-thread" id="thread-${thread.id}">
@@ -87,7 +221,7 @@ export namespace View {
 
       if (page === 'replies') {
         const idHtml = `<span>@${thread.id}</span>`;
-        const contentHtml = thread.content;
+        const contentHtml = Markup.contentMapper(thread.content);
 
         return `
           <article class="dove-card is-thread" id="thread-${thread.id}">
@@ -122,7 +256,7 @@ export namespace View {
 
       if (page === 'threads') {
         const idHtml = `<a href="/threads/${threadId}#reply-${reply.id}">#${reply.id}</a>`;
-        const contentHtml = reply.content;
+        const contentHtml = Markup.contentPreviewMapper(reply.content);
 
         return `
           <article class="dove-card is-reply">
@@ -139,11 +273,8 @@ export namespace View {
       }
 
       if (page === 'replies') {
-        const idHtml = `
-          <a href="#reply-${reply.id}" data-autoid-reply="${reply.id}">
-            #${reply.id}
-          </a>`;
-        const contentHtml = reply.content;
+        const idHtml = `<a href="#reply-${reply.id}" data-autoid-reply="${reply.id}">#${reply.id}</a>`;
+        const contentHtml = Markup.contentMapper(reply.content);
 
         return `
           <article class="dove-card is-reply" id="reply-${reply.id}">
@@ -166,21 +297,17 @@ export namespace View {
       thread: DB.Thread;
     }> = ({ thread }) => {
       const idHtml = `<a href="/threads/${thread.id}">@${thread.id}</a>`;
-
-      const contentHtml = `
-        <div class="dove-index-content">${thread.content}</div>
-      `;
-
-      const lengthHtml = `<div>(${thread.replies.entries.length})</div>`;
+      const contentHtml = Markup.contentLineMapper(thread.content);
+      const lengthHtml = `(${thread.replies.entries.length})`;
 
       return `
         ${idHtml}
-        ${contentHtml}
-        ${lengthHtml}
+        <div class="dove-index-content">${contentHtml}</div>
+        <div>(${lengthHtml})</div>
       `;
     };
 
-    export const Fields: Fragment<{ page: Page }> = ({ page }) => {
+    export const Fields: Fragment = () => {
       return `
         <div class="dove-controls">
           <textarea
@@ -374,7 +501,7 @@ export namespace View {
       data-autosave="thread"
     >
       <h2>${i18n.threadsView.createHeader}</h2>
-      ${Fragments.Fields({ page: 'threads' })}
+      ${Fragments.Fields()}
     </form>
     <section>
       <h2>${i18n.threadsView.latestHeader}</h2>
@@ -439,7 +566,7 @@ export namespace View {
         enctype="application/x-www-form-urlencoded"
       >
         <h2>${i18n.repliesView.createHeader}</h2>
-        ${Fragments.Fields({ page: 'replies' })}
+        ${Fragments.Fields()}
       </form>
       `;
 
