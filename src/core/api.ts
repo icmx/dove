@@ -144,6 +144,8 @@ export namespace Api {
 
         await Commands.parse(content, {
           '': async () => {
+            Security.assertRepliesAreAllowed(threadId);
+
             const id = DB.mutate(() => {
               return DB.insertReply(threadId, {
                 content,
