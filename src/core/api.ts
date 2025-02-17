@@ -117,6 +117,19 @@ export namespace Api {
 
             await View.make({ buildThread: id });
           },
+          '/delete': Commands.idsHandler(async (ids) => {
+            const passwordHashes = DB.selectThreadsByIds(ids).map(
+              (thread) => thread.passwordHash
+            );
+
+            await Security.assertHasAccess(password, passwordHashes);
+
+            DB.mutate(() => {
+              DB.deleteThreads(ids);
+            });
+
+            await View.make({ cleanThreads: ids });
+          }),
         });
 
         rep.handleAutosave(_autosave).handleRedurectUrl();
@@ -158,6 +171,21 @@ export namespace Api {
 
             await View.make({ buildThread: threadId });
           },
+          '/delete': Commands.idsHandler(async (ids) => {
+            const passwordHashes = DB.selectThreadsByIds(ids).map(
+              (thread) => thread.passwordHash
+            );
+
+            await Security.assertHasAccess(password, passwordHashes);
+
+            DB.mutate(() => {
+              DB.deleteReplies(threadId, ids);
+            });
+
+            rep.redirectUrl = `/threads/${threadId}`;
+
+            await View.make({ buildThread: threadId });
+          }),
         });
 
         rep.handleAutosave(_autosave).handleRedurectUrl();

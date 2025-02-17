@@ -11,6 +11,7 @@ export namespace Env {
     DOVE_TRUST_PROXY: z.boolean({ coerce: true }).default(false),
     DOVE_DISABLE_STATIC: z.boolean({ coerce: true }).default(false),
     DOVE_VIEW_ROOT: z.string().default('./view'),
+    DOVE_PASSWORD: z.string().default('000000'),
   });
 
   const values = Object.fromEntries(

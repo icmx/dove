@@ -1,5 +1,6 @@
 import { JSONFileSyncPreset } from 'lowdb/node';
 import { Env } from '../shared/env';
+import { Status } from '../shared/status';
 
 export namespace DB {
   export type Collection<TEntry> = {
@@ -117,7 +118,7 @@ export namespace DB {
     );
 
     if (!thread) {
-      throw new Error(`Thread @${id} not found`);
+      throw Status.notFound(`Thread @${id} not found`);
     }
 
     return thread;
@@ -181,7 +182,9 @@ export namespace DB {
     );
 
     if (!reply) {
-      throw new Error(`Reply #${id} in thread @${threadId} not found`);
+      throw Status.notFound(
+        `Reply #${id} in thread @${threadId} not found`
+      );
     }
 
     return reply;
