@@ -1,22 +1,50 @@
 import { Status } from './status';
 
-const parseIdsArgs = (args: string[]): number[] => {
+const breakCommand = (source: string): [string, string] => {
+  const sepIndex = source.search(/\s+/);
+
+  const name = source.slice(0, sepIndex);
+  const body = source.slice(sepIndex);
+
+  return [name, body];
+};
+
+const parseIdBody = (body: string): number => {
+  const matches = body.match(/\d{1,10}/);
+  const error = Status.badRequest('No id provided');
+
+  if (!matches || matches.length === 0) {
+    throw error;
+  }
+
+  const id = +matches.at(0)!;
+
+  if (!Number.isSafeInteger(id)) {
+    throw error;
+  }
+
+  return id;
+};
+
+const parseIdsBody = (body: string): number[] => {
+  const matches = body.match(/\d{1,10}/g);
+  const error = Status.badRequest('No ids provided');
+
+  if (!matches) {
+    throw error;
+  }
+
   const ids = new Set<number>();
 
-  args.forEach((arg) => {
-    const matches = arg.matchAll(/\d{1,10}/g);
-
-    Array.from(matches).forEach((match) => {
-      const id = +match[0];
-
-      if (Number.isSafeInteger(id)) {
-        ids.add(id);
-      }
+  matches
+    .map((match) => +match)
+    .filter((id) => Number.isSafeInteger(id))
+    .forEach((id) => {
+      ids.add(id);
     });
-  });
 
   if (ids.size === 0) {
-    throw Status.badRequest('No ids provided');
+    throw error;
   }
 
   return Array.from(ids);
@@ -25,31 +53,45 @@ const parseIdsArgs = (args: string[]): number[] => {
 export namespace Commands {
   export type Name = `/${string}` | '';
 
-  export type Handler<TArgs = string[]> = (
-    args: TArgs
-  ) => Promise<void> | void;
+  export type Handler<TBody> = (body: TBody) => Promise<void> | void;
+
+  export const idHandler = (
+    handler: Handler<number>
+  ): Handler<string> => {
+    return (body) => {
+      const id = parseIdBody(body);
+
+      return handler(id);
+    };
+  };
 
   export const idsHandler = (
     handler: Handler<number[]>
-  ): Handler<string[]> => {
-    return (args) => {
-      const ids = parseIdsArgs(args);
+  ): Handler<string> => {
+    return (body) => {
+      const ids = parseIdsBody(body);
 
       return handler(ids);
     };
   };
 
-  export const parse = (
+  export const parse = <TBody>(
     source = '',
-    handlers: Record<Name, Handler>
+    handlers: { '': Handler<string> } & Record<Name, Handler<TBody>>
   ) => {
-    const [name, ...args] = source.split(/\s+/);
-    const handler: Handler = handlers[name] || handlers[''];
+    if (!source.startsWith('/')) {
+      const handler = handlers[''];
+
+      return handler(source);
+    }
+
+    const [name, body] = breakCommand(source);
+    const handler = handlers[name];
 
     if (!handler) {
       throw Status.badRequest(`No handler for command ${name}`);
     }
 
-    return handler(args);
+    return handler(body);
   };
 }

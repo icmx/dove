@@ -38,7 +38,7 @@ export namespace Security {
   };
 
   export const assertCanPerform = async (
-    password: string
+    password: string | undefined
   ): Promise<void> => {
     if (!password) {
       throw Status.unauthorized('No password provided');

@@ -3,17 +3,12 @@ import { FastifyInstance } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { Commands } from '../shared/commands';
+import { Schemas } from '../shared/schemas';
 import { Server } from '../shared/server';
 import { Status } from '../shared/status';
-import {
-  DOVE_CONTENT_MAX,
-  DOVE_CONTENT_MIN,
-  DOVE_PASSWORD_MAX,
-  DOVE_PASSWORD_MIN,
-} from '../constants';
 import { DB } from './db';
-import { View } from './view';
 import { Security } from './security';
+import { View } from './view';
 
 declare module 'fastify' {
   interface FastifyReply {
@@ -74,24 +69,6 @@ export namespace Api {
       max: 3,
     };
 
-    const body = z.object({
-      _autosave: z.optional(z.enum(['reply', 'thread'])),
-      content: z
-        .string()
-        .min(DOVE_CONTENT_MIN)
-        .max(DOVE_CONTENT_MAX)
-        .regex(/[^\s]/g)
-        .transform((content) =>
-          content
-            .replace(/\r?\n/g, '\n')
-            .replace(/\n\n+/g, '\n\n')
-            .replace(/\s+\n/g, '\n')
-        ),
-      password: z.optional(
-        z.string().min(DOVE_PASSWORD_MIN).max(DOVE_PASSWORD_MAX)
-      ),
-    });
-
     api.withTypeProvider<ZodTypeProvider>().route({
       method: 'POST',
       url: '/threads',
@@ -99,7 +76,7 @@ export namespace Api {
         rateLimit,
       },
       schema: {
-        body,
+        body: Schemas.bodySchema,
       },
       handler: async function (req, rep) {
         const { _autosave, content, password } = req.body;
@@ -117,6 +94,15 @@ export namespace Api {
 
             await View.make({ buildThread: id });
           },
+          '/warn': Commands.idHandler(async (id) => {
+            await Security.assertCanPerform(password);
+
+            DB.mutate(() => {
+              DB.updateThreads([id], { restriction: 'warning' });
+            });
+
+            await View.make({ buildThread: id });
+          }),
           '/delete': Commands.idsHandler(async (ids) => {
             const passwordHashes = DB.selectThreadsByIds(ids).map(
               (thread) => thread.passwordHash
@@ -146,7 +132,7 @@ export namespace Api {
         params: z.object({
           threadId: z.number({ coerce: true }).int().gt(0),
         }),
-        body,
+        body: Schemas.bodySchema,
       },
       handler: async function (req, rep) {
         const { threadId } = req.params;
@@ -171,6 +157,19 @@ export namespace Api {
 
             await View.make({ buildThread: threadId });
           },
+          '/warn': Commands.idHandler(async (id) => {
+            await Security.assertCanPerform(password);
+
+            DB.mutate(() => {
+              DB.updateReplies(threadId, [id], {
+                restriction: 'warning',
+              });
+            });
+
+            rep.redirectUrl = `/threads/${threadId}`;
+
+            await View.make({ buildThread: threadId });
+          }),
           '/delete': Commands.idsHandler(async (ids) => {
             const passwordHashes = DB.selectThreadsByIds(ids).map(
               (thread) => thread.passwordHash
