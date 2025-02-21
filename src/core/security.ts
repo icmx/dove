@@ -3,6 +3,7 @@ import { Hashing } from '../shared/hashing';
 import { Status } from '../shared/status';
 import { DOVE_THREAD_HARD_LIMIT } from '../constants';
 import { DB } from './db';
+import { Seconds } from '../shared/seconds';
 
 export namespace Security {
   export const hashIp = async (ip: string): Promise<string> => {
@@ -84,5 +85,21 @@ export namespace Security {
         throw error;
       }
     }
+  };
+
+  export const assertNotBanned = async (
+    ipHash: string
+  ): Promise<void> => {
+    const ban = DB.selectBan(ipHash);
+
+    if (!ban) {
+      return;
+    }
+
+    if (Seconds.isExpired(ban.expires)) {
+      return;
+    }
+
+    throw Status.forbidden('You are banned');
   };
 }

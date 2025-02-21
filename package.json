@@ -16,7 +16,8 @@
     "dev": "tsx watch ./src/main.ts",
     "build": "tsx ./utils/build.ts",
     "start": "node ./dist/main.js",
-    "build-view": "tsx ./utils/build-view.ts"
+    "build-view": "tsx ./utils/build-view.ts",
+    "clean-bans": "tsx ./utils/clean-bans.ts"
   },
   "devDependencies": {
     "@types/node": "^22.13.1",

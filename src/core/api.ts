@@ -4,6 +4,7 @@ import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { Commands } from '../shared/commands';
 import { Schemas } from '../shared/schemas';
+import { Seconds } from '../shared/seconds';
 import { Server } from '../shared/server';
 import { Status } from '../shared/status';
 import { DB } from './db';
@@ -86,6 +87,8 @@ export namespace Api {
 
         await Commands.parse(content, {
           '': async () => {
+            await Security.assertNotBanned(ipHash);
+
             const id = DB.mutate(() => {
               return DB.insertThread({ content, ipHash, passwordHash });
             });
@@ -99,6 +102,19 @@ export namespace Api {
 
             DB.mutate(() => {
               DB.updateThreads([id], { restriction: 'warning' });
+            });
+
+            await View.make({ buildThread: id });
+          }),
+          '/ban': Commands.idHandler(async (id) => {
+            await Security.assertCanPerform(password);
+            const { ipHash } = DB.selectThreadById(id);
+
+            const expires = Seconds.now() + Seconds.YEAR;
+
+            DB.mutate(() => {
+              DB.insertBan(ipHash, { expires });
+              DB.updateThreads([id], { restriction: 'ban' });
             });
 
             await View.make({ buildThread: id });
@@ -143,7 +159,8 @@ export namespace Api {
 
         await Commands.parse(content, {
           '': async () => {
-            Security.assertRepliesAreAllowed(threadId);
+            await Security.assertNotBanned(ipHash);
+            await Security.assertRepliesAreAllowed(threadId);
 
             const id = DB.mutate(() => {
               return DB.insertReply(threadId, {
@@ -167,6 +184,19 @@ export namespace Api {
             });
 
             rep.redirectUrl = `/threads/${threadId}`;
+
+            await View.make({ buildThread: threadId });
+          }),
+          '/ban': Commands.idHandler(async (id) => {
+            await Security.assertCanPerform(password);
+
+            const { ipHash } = DB.selectReplyById(threadId, id);
+            const expires = Seconds.now() + Seconds.YEAR;
+
+            DB.mutate(() => {
+              DB.insertBan(ipHash, { expires });
+              DB.updateReplies(threadId, [id], { restriction: 'ban' });
+            });
 
             await View.make({ buildThread: threadId });
           }),

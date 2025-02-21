@@ -16,6 +16,7 @@ import {
   DOVE_TITLE_CONTENT_LIMIT,
 } from '../constants';
 import { DB } from './db';
+import { Seconds } from '../shared/seconds';
 
 const i18n = I18N.locales[Env.config.DOVE_LANG];
 
@@ -158,8 +159,8 @@ export namespace View {
 
     export type Page = 'threads' | 'replies';
 
-    export const Time: Fragment<number> = (ms: number) => {
-      const value = new Date(ms * 1000)
+    export const Time: Fragment<number> = (seconds: number) => {
+      const value = Seconds.toDate(seconds)
         .toJSON()
         .replace('T', ' ')
         .slice(0, 16);

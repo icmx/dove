@@ -1,5 +1,6 @@
 import { JSONFileSyncPreset } from 'lowdb/node';
 import { Env } from '../shared/env';
+import { Seconds } from '../shared/seconds';
 import { Status } from '../shared/status';
 
 export namespace DB {
@@ -46,10 +47,6 @@ export namespace DB {
     },
   });
 
-  export const timestamp = (): number => {
-    return Math.round(Date.now() / 1000);
-  };
-
   export const mutate = <TResult>(mutation: () => TResult): TResult => {
     db.read();
 
@@ -64,7 +61,7 @@ export namespace DB {
     ipHash: string,
     data: Pick<Ban, 'expires'>
   ): void => {
-    const created = timestamp();
+    const created = Seconds.now();
 
     db.data.bans[ipHash] = { created, ...data };
   };
@@ -85,7 +82,7 @@ export namespace DB {
     data: Pick<Thread, 'content' | 'ipHash' | 'passwordHash'>
   ): number => {
     const id = db.data.threads.counter + 1;
-    const created = timestamp();
+    const created = Seconds.now();
     const replies: Collection<Reply> = {
       counter: 0,
       entries: [],
@@ -152,7 +149,7 @@ export namespace DB {
     const thread = selectThreadById(threadId);
 
     const id = thread.replies.counter + 1;
-    const created = timestamp();
+    const created = Seconds.now();
 
     const reply: Reply = {
       id,
