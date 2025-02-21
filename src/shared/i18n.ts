@@ -22,6 +22,7 @@ export namespace I18N {
         warning: string;
         ban: string;
       };
+      homeLink: string;
       repliesCount: (count: number) => string;
     };
   };
@@ -51,6 +52,7 @@ export namespace I18N {
         warning: 'This user was warned',
         ban: 'This user was banned',
       },
+      homeLink: 'home',
       repliesCount: (count) => {
         if (count > 1) {
           return `${count} replies`;
@@ -88,6 +90,7 @@ export namespace I18N {
         warning: 'Бул колдонуучуга эскертүү берилди',
         ban: 'Бул колдонуучуга тыюу салынган',
       },
+      homeLink: 'артка',
       repliesCount: (count) => {
         if (count > 0) {
           return `${count} жооп`;
@@ -121,6 +124,7 @@ export namespace I18N {
         warning: 'Этот пользователь был предупрежден',
         ban: 'Этот пользователь был забанен',
       },
+      homeLink: 'назад',
       repliesCount: (count) => {
         if (count % 10 === 1 && count % 100 !== 11) {
           return `1 ответ`;

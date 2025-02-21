@@ -306,7 +306,7 @@ export namespace View {
       return `
         ${idHtml}
         <div class="dove-index-content">${contentHtml}</div>
-        <div>(${lengthHtml})</div>
+        <div>${lengthHtml}</div>
       `;
     };
 

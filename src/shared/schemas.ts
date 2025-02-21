@@ -20,7 +20,7 @@ export namespace Schemas {
         content
           .replace(/\r?\n/g, '\n')
           .replace(/\n\n+/g, '\n\n')
-          .replace(/\s+\n/g, '\n')
+          .replace(/ +\n/g, '\n')
       ),
     password: z.optional(
       z.string().min(DOVE_PASSWORD_MIN).max(DOVE_PASSWORD_MAX)
