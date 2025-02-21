@@ -65,6 +65,39 @@ export namespace I18N {
     },
   };
 
+  export const kg: Data = {
+    threadsView: {
+      title: 'Темалар',
+      createHeader: 'Жаңы тема түзүү',
+      latestHeader: 'Акыркы темалар',
+      indexHeader: 'Бардык темалар',
+    },
+    repliesView: {
+      title: 'Жооп берет',
+      createHeader: 'Жаңы жооп түзүү',
+      softLimitReached:
+        'Өтө көп жооптор. Жаңы жооптор мындан ары бул теманы козгобойт.',
+      hardLimitReached:
+        'Өтө көп жооптор. Бул темага мындан ары жооп берүү мүмкүн эмес.',
+    },
+    shared: {
+      createButton: 'Жөнөтүү',
+      content: 'Мазмун',
+      password: 'Сырсөзү',
+      restriction: {
+        warning: 'Бул колдонуучуга эскертүү берилди',
+        ban: 'Бул колдонуучуга тыюу салынган',
+      },
+      repliesCount: (count) => {
+        if (count > 0) {
+          return `${count} жооп`;
+        }
+
+        return `Жооптор жок`;
+      },
+    },
+  };
+
   export const ru: Data = {
     threadsView: {
       title: 'Треды',
@@ -112,6 +145,7 @@ export namespace I18N {
 
   export const locales: Record<Lang, Data> = {
     en,
+    kg,
     ru,
   };
 }

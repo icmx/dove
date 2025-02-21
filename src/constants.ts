@@ -3,7 +3,7 @@ export const DOVE_APP_NAME = 'dove';
 export const DOVE_APP_CAPTION = 'experimental textboard';
 
 /** Available view locales */
-export const DOVE_LANGS = ['en', 'ru'] as const;
+export const DOVE_LANGS = ['en', 'kg', 'ru'] as const;
 
 /** Minimum content length */
 export const DOVE_CONTENT_MIN = 3;
