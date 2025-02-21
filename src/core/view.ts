@@ -3,6 +3,8 @@ import { Env } from '../shared/env';
 import { I18N } from '../shared/i18n';
 import { Status } from '../shared/status';
 import {
+  DOVE_APP_CAPTION,
+  DOVE_APP_NAME,
   DOVE_CONTENT_MAX,
   DOVE_CONTENT_MIN,
   DOVE_LINE_CONTENT_LIMIT,
@@ -351,7 +353,7 @@ export namespace View {
           <head>
             <meta charset="UTF-8" />
             <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-            <title>HTTP ${body.statusCode} — ${i18n.appName}</title>
+            <title>HTTP ${body.statusCode} — ${DOVE_APP_NAME}</title>
             <style>
               html { color-scheme: dark light }
               body { text-align: center }
@@ -392,7 +394,7 @@ export namespace View {
           <body class="dove-view">
             <header class="dove-view-header">
               <a href="/">
-                <h1>🕊️ ${i18n.appName}<sup style="font: italic 200 0.8rem serif;">~alpha</sup></h1>
+                <h1>🕊️ ${DOVE_APP_NAME}<sup style="font: italic 200 0.8rem serif;">~alpha</sup></h1>
               </a>
             </header>
             <main class="dove-view-main">
@@ -402,7 +404,7 @@ export namespace View {
               ${asideChildren}
             </aside>
             <footer class="dove-view-footer">
-              <p>${i18n.appName} — ${i18n.appCaption}</p>
+              <p>${DOVE_APP_NAME} — ${DOVE_APP_CAPTION}</p>
               <p><a href="/">home</a></p>
             </footer>
             <script>
