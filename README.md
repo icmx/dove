@@ -1,9 +1,9 @@
 # 🕊️ dove
 
-> [!WARNING]
-> Work in Progress. Not all features are implemented for now; they will be available later.
+> [!IMPORTANT]
+> Work in Progress. Most of the planned features are implemented, but some are not stable or are subject to change at any time due to ongoing development.
 
-Experimental textboard built to be as simple as it possible.
+Experimental textboard built to be as simple as possible — but keeping some of essential features.
 
 I'm making this entirely for fun, not for serious business production.
 
