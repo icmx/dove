@@ -19,27 +19,15 @@ import {
 } from '../constants';
 import { DB } from './db';
 import { Seconds } from '../shared/seconds';
+import { Functional } from '../shared/functional';
 
 const i18n = I18N.locales[Env.config.DOVE_LANG];
 
 export namespace View {
-  export type F<P = void, R = void> = (props: P) => R;
-
   export namespace Markup {
-    export type Mapper = F<string, string>;
+    export type Mapper = Functional.Action<string, string>;
 
-    export type Operator<P = void> = F<P, Mapper>;
-
-    export const pipe = <I, O>(then: F<I, O>) => {
-      return {
-        then: <J>(next: F<O, J>) => {
-          return pipe((from: I) => {
-            return next(then(from));
-          });
-        },
-        done: () => then,
-      };
-    };
+    export type Operator<TArg = void> = Functional.Action<TArg, Mapper>;
 
     export const sanitize: Operator = () => {
       return (source = '') => {
@@ -74,9 +62,7 @@ export namespace View {
           return starter;
         }
 
-        return starter
-          .concat(' ')
-          .concat(`<em class="markup-cut">${cut}</em>`);
+        return starter.concat(cut);
       };
     };
 
@@ -135,29 +121,39 @@ export namespace View {
       };
     };
 
-    export const contentMapper = pipe(sanitize())
+    const fromSanitize = new Functional.Pipe(sanitize());
+
+    export const contentMapper = fromSanitize
       .then(preview({ max: 0 }))
       .then(linkAnchors())
       .then(breakSections())
-      .done();
+      .compile();
 
-    export const contentPreviewMapper = pipe(sanitize())
-      .then(preview({ max: DOVE_PREVIEW_CONTENT_LIMIT, cut: '[...]' }))
+    export const contentPreviewMapper = fromSanitize
+      .then(
+        preview({
+          max: DOVE_PREVIEW_CONTENT_LIMIT,
+          cut: ' <em class="markup-cut">[...]</em>',
+        })
+      )
       .then(linkAnchors())
       .then(breakSections())
-      .done();
+      .compile();
 
-    export const contentLineMapper = pipe(sanitize())
+    export const contentLineMapper = fromSanitize
       .then(preview({ max: DOVE_LINE_CONTENT_LIMIT }))
-      .done();
+      .compile();
 
-    export const contentTitleMapper = pipe(sanitize())
-      .then(preview({ max: DOVE_TITLE_CONTENT_LIMIT }))
-      .done();
+    export const contentTitleMapper = fromSanitize
+      .then(preview({ max: DOVE_TITLE_CONTENT_LIMIT, cut: '...' }))
+      .compile();
   }
 
   export namespace Fragments {
-    export type Fragment<P = void> = F<P, string>;
+    export type Fragment<TProps = void> = Functional.Action<
+      TProps,
+      string
+    >;
 
     export type Page = 'threads' | 'replies';
 
@@ -405,7 +401,7 @@ export namespace View {
             </aside>
             <footer class="dove-view-footer">
               <p>${DOVE_APP_NAME} — ${DOVE_APP_CAPTION}</p>
-              <p><a href="/">home</a></p>
+              <p><a href="/">${i18n.shared.homeLink}</a></p>
             </footer>
             <script>
               ${script}
@@ -546,6 +542,8 @@ export namespace View {
   ): Promise<void> => {
     const thread = DB.selectThreadById(threadId);
 
+    const titleHtml = Markup.contentTitleMapper(thread.content);
+
     const threadHtml = Fragments.ThreadCard({
       page: 'replies',
       thread,
@@ -586,7 +584,7 @@ export namespace View {
     }
 
     const html = Fragments.Layout({
-      title: i18n.repliesView.title,
+      title: `@${thread.id} ${titleHtml}`,
       mainChildren: `
         ${threadHtml}
         ${repliesHtml}

@@ -79,10 +79,8 @@ export namespace Commands {
     source = '',
     handlers: { '': Handler<string> } & Record<Name, Handler<TBody>>
   ) => {
-    if (!source.startsWith('/')) {
-      const handler = handlers[''];
-
-      return handler(source);
+    if (source.at(0) !== '/') {
+      return handlers[''](source);
     }
 
     const [name, body] = breakCommand(source);
