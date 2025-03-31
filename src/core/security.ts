@@ -1,9 +1,9 @@
 import { Env } from '../shared/env';
 import { Hashing } from '../shared/hashing';
+import { Seconds } from '../shared/seconds';
 import { Status } from '../shared/status';
 import { DOVE_THREAD_HARD_LIMIT } from '../constants';
 import { DB } from './db';
-import { Seconds } from '../shared/seconds';
 
 export namespace Security {
   export const hashIp = async (ip: string): Promise<string> => {
@@ -100,6 +100,8 @@ export namespace Security {
       return;
     }
 
-    throw Status.forbidden('You are banned');
+    const stamp = Seconds.toStamp(ban.expires);
+
+    throw Status.forbidden(`You are banned until ${stamp}`);
   };
 }

@@ -158,10 +158,7 @@ export namespace View {
     export type Page = 'threads' | 'replies';
 
     export const Time: Fragment<number> = (seconds: number) => {
-      const value = Seconds.toDate(seconds)
-        .toJSON()
-        .replace('T', ' ')
-        .slice(0, 16);
+      const value = Seconds.toStamp(seconds);
 
       return `<time class="dove-datetime" datetime="${value}">${value}</time>`;
     };

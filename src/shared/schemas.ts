@@ -26,4 +26,21 @@ export namespace Schemas {
       z.string().min(DOVE_PASSWORD_MIN).max(DOVE_PASSWORD_MAX)
     ),
   });
+
+  export const warnCommandArgsSchema = z
+    .array(idSchema)
+    .min(1)
+    .max(1)
+    .transform((ids) => ids.at(0)!);
+
+  export const banCommandArgsSchema = z.object({
+    id: idSchema,
+    count: idSchema,
+    unit: z.enum(['h', 'd', 'w', 'm', 'y']),
+  });
+
+  export const deleteCommandArgsSchema = z
+    .array(idSchema)
+    .min(1)
+    .max(100);
 }

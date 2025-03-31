@@ -1,95 +1,66 @@
-import { Status } from './status';
-
-const breakCommand = (source: string): [string, string] => {
-  const sepIndex = source.search(/\s+/);
-
-  const name = source.slice(0, sepIndex);
-  const body = source.slice(sepIndex);
-
-  return [name, body];
-};
-
-const parseIdBody = (body: string): number => {
-  const matches = body.match(/\d{1,10}/);
-  const error = Status.badRequest('No id provided');
-
-  if (!matches || matches.length === 0) {
-    throw error;
-  }
-
-  const id = +matches.at(0)!;
-
-  if (!Number.isSafeInteger(id)) {
-    throw error;
-  }
-
-  return id;
-};
-
-const parseIdsBody = (body: string): number[] => {
-  const matches = body.match(/\d{1,10}/g);
-  const error = Status.badRequest('No ids provided');
-
-  if (!matches) {
-    throw error;
-  }
-
-  const ids = new Set<number>();
-
-  matches
-    .map((match) => +match)
-    .filter((id) => Number.isSafeInteger(id))
-    .forEach((id) => {
-      ids.add(id);
-    });
-
-  if (ids.size === 0) {
-    throw error;
-  }
-
-  return Array.from(ids);
-};
+import { Schemas } from './schemas';
+import { Seconds } from './seconds';
 
 export namespace Commands {
-  export type Name = `/${string}` | '';
+  const WARN_NAME = '/warn';
+  const BAN_NAME = '/ban';
+  const DELETE_NAME = '/delete';
+  const CREATE_NAME = '/create';
 
-  export type Handler<TBody> = (body: TBody) => Promise<void> | void;
+  const NAMES = [
+    WARN_NAME,
+    BAN_NAME,
+    DELETE_NAME,
+    CREATE_NAME,
+  ] as const;
 
-  export const idHandler = (
-    handler: Handler<number>
-  ): Handler<string> => {
-    return (body) => {
-      const id = parseIdBody(body);
+  type Handlers = Record<(typeof NAMES)[number], () => Promise<void>>;
 
-      return handler(id);
-    };
-  };
-
-  export const idsHandler = (
-    handler: Handler<number[]>
-  ): Handler<string> => {
-    return (body) => {
-      const ids = parseIdsBody(body);
-
-      return handler(ids);
-    };
-  };
-
-  export const parse = <TBody>(
-    source = '',
-    handlers: { '': Handler<string> } & Record<Name, Handler<TBody>>
-  ) => {
-    if (source.at(0) !== '/') {
-      return handlers[''](source);
+  export const from = async (source: string, handlers: Handlers) => {
+    if (!source.startsWith('/')) {
+      await handlers[CREATE_NAME]();
     }
 
-    const [name, body] = breakCommand(source);
-    const handler = handlers[name];
-
-    if (!handler) {
-      throw Status.badRequest(`No handler for command ${name}`);
+    for (const name of NAMES) {
+      if (source.startsWith(name)) {
+        await handlers[name]();
+        return;
+      }
     }
 
-    return handler(body);
+    await handlers[CREATE_NAME]();
+  };
+
+  export const parseWarnArgs = (source: string): number => {
+    const matches = source.match(/\d{1,10}/) || [];
+
+    const id = Schemas.warnCommandArgsSchema.parse(Array.from(matches));
+
+    return id;
+  };
+
+  export const parseBanArgs = (
+    source: string
+  ): { id: number; expires: number } => {
+    const data =
+      /(?<id>\d+)\s+(?<count>\d+)\s*?(?<unit>(h|d|w|m|y))/.exec(source)
+        ?.groups || {};
+
+    const { id, count, unit } =
+      Schemas.banCommandArgsSchema.parse(data);
+
+    const expires = Seconds.future({ count, unit });
+
+    return { id, expires };
+  };
+
+  export const parseDeleteArgs = (source: string): number[] => {
+    const matches = source.match(/\d{1,10}/g) || [];
+
+    const ids = Schemas.deleteCommandArgsSchema.parse(
+      Array.from(matches)
+    );
+
+    return ids;
   };
 }

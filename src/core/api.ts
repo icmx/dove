@@ -85,8 +85,8 @@ export namespace Api {
         const ipHash = await Security.hashIp(req.ip);
         const passwordHash = await Security.hashPassword(password);
 
-        await Commands.parse(content, {
-          '': async () => {
+        await Commands.from(content, {
+          '/create': async () => {
             await Security.assertNotBanned(ipHash);
 
             const id = DB.mutate(() => {
@@ -97,20 +97,21 @@ export namespace Api {
 
             await View.make({ buildThread: id });
           },
-          '/warn': Commands.idHandler(async (id) => {
+          '/warn': async () => {
             await Security.assertCanPerform(password);
+            const id = Commands.parseWarnArgs(content);
 
             DB.mutate(() => {
               DB.updateThreads([id], { restriction: 'warning' });
             });
 
             await View.make({ buildThread: id });
-          }),
-          '/ban': Commands.idHandler(async (id) => {
+          },
+          '/ban': async () => {
+            const { id, expires } = Commands.parseBanArgs(content);
+
             await Security.assertCanPerform(password);
             const { ipHash } = DB.selectThreadById(id);
-
-            const expires = Seconds.now() + Seconds.YEAR;
 
             DB.mutate(() => {
               DB.insertBan(ipHash, { expires });
@@ -118,8 +119,10 @@ export namespace Api {
             });
 
             await View.make({ buildThread: id });
-          }),
-          '/delete': Commands.idsHandler(async (ids) => {
+          },
+          '/delete': async () => {
+            const ids = Commands.parseDeleteArgs(content);
+
             const passwordHashes = DB.selectThreadsByIds(ids).map(
               (thread) => thread.passwordHash
             );
@@ -131,7 +134,7 @@ export namespace Api {
             });
 
             await View.make({ cleanThreads: ids });
-          }),
+          },
         });
 
         rep.handleAutosave(_autosave).handleRedurectUrl();
@@ -157,8 +160,8 @@ export namespace Api {
         const ipHash = await Security.hashIp(req.ip);
         const passwordHash = await Security.hashPassword(password);
 
-        await Commands.parse(content, {
-          '': async () => {
+        await Commands.from(content, {
+          '/create': async () => {
             await Security.assertNotBanned(ipHash);
             await Security.assertRepliesAreAllowed(threadId);
 
@@ -174,7 +177,9 @@ export namespace Api {
 
             await View.make({ buildThread: threadId });
           },
-          '/warn': Commands.idHandler(async (id) => {
+          '/warn': async () => {
+            const id = Commands.parseWarnArgs(content);
+
             await Security.assertCanPerform(password);
 
             DB.mutate(() => {
@@ -186,12 +191,13 @@ export namespace Api {
             rep.redirectUrl = `/threads/${threadId}`;
 
             await View.make({ buildThread: threadId });
-          }),
-          '/ban': Commands.idHandler(async (id) => {
+          },
+          '/ban': async () => {
+            const { id, expires } = Commands.parseBanArgs(content);
+
             await Security.assertCanPerform(password);
 
             const { ipHash } = DB.selectReplyById(threadId, id);
-            const expires = Seconds.now() + Seconds.YEAR;
 
             DB.mutate(() => {
               DB.insertBan(ipHash, { expires });
@@ -199,8 +205,10 @@ export namespace Api {
             });
 
             await View.make({ buildThread: threadId });
-          }),
-          '/delete': Commands.idsHandler(async (ids) => {
+          },
+          '/delete': async () => {
+            const ids = Commands.parseDeleteArgs(content);
+
             const passwordHashes = DB.selectThreadsByIds(ids).map(
               (thread) => thread.passwordHash
             );
@@ -214,7 +222,7 @@ export namespace Api {
             rep.redirectUrl = `/threads/${threadId}`;
 
             await View.make({ buildThread: threadId });
-          }),
+          },
         });
 
         rep.handleAutosave(_autosave).handleRedurectUrl();
