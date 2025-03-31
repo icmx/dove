@@ -87,7 +87,11 @@ export namespace View {
             if (pattern.startsWith('@')) {
               const [threadId, replyId] = pattern.slice(1).split('#');
 
-              return `<a class="markup-link" href="/threads/${threadId}#reply-${replyId}">${pattern}</a>`;
+              if (replyId) {
+                return `<a class="markup-link" href="/threads/${threadId}#reply-${replyId}">${pattern}</a>`;
+              }
+
+              return `<a class="markup-link" href="/threads/${threadId}">${pattern}</a>`;
             }
 
             return '';

@@ -17,6 +17,6 @@ Some protection:
 
   - No silent rises: when a reply is deleted, thread become lowered to a previous raising time, not a deleted reply creation time
   - Rate limits: limit requests for same IP in a set time period
-  - Secrets hashing: secrets are hashed by Argon2id function
+  - Password hashing: passwords are hashed by Argon2id function
   - Warning for users: engine owner can mark a post to warn user
   - Ban for users: engine owner can mark a post to ban user for a specific term
