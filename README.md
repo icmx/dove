@@ -1,11 +1,11 @@
 # 🕊️ dove
 
 > [!IMPORTANT]
-> Work in Progress. Most of the planned features are implemented, but some are not stable or are subject to change at any time due to ongoing development.
+> Work in Progress. Most of the planned features are implemented, but may be not really stable or are subject to change at any time due to ongoing development.
 
-Experimental textboard built to be as simple as possible — but keeping some of essential features.
+Experimental textboard built to be as simple, but keeping some of essential features.
 
-I'm making this entirely for fun, not for serious business production.
+I'm making this entirely for fun, not for a serious business production.
 
 ## Stack
 
@@ -27,3 +27,7 @@ npm install
   - `npm run build` — build a production instance code
   - `npm run start` — start a production instance (requires `build` script before)
   - `npm run build-view` — utility to force build or rebuild HTML pages
+
+## Documentation
+
+  - [Features](./docs/features.md) — overview to engine features
